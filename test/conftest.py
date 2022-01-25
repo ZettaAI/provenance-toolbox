@@ -7,8 +7,6 @@ import cloudvolume as cv
 PATH = "./test/test_cv"
 
 
-
-
 def make_testcloudvolume(path):
 
     num_channels = 1
@@ -46,7 +44,6 @@ def teardown(path):
 @pytest.fixture
 def testcloudvolume_with_td():
     yield make_testcloudvolume(PATH)
-
     teardown(PATH)
 
 

@@ -18,18 +18,23 @@ class Process:
     '''A representation of a process that affects a CloudVolume'''
 
     def __init__(self, description: str, parameters: Union[dict, Namespace],
-                 code_env: CodeEnvT):
+                 *code_envs: List[CodeEnvT]):
         self.description = description
         self.parameters = parameters
-        self.code_env = code_env
+        self.code_envs = code_envs
 
     def log(self) -> Tuple[Dict[str, str], List[str]]:
         '''Returns the data to log'''
-        code_envfile, code_envfilecontents = self.code_env.log()
+        code_envfiles, code_envfilecontents = list(), list()
+        for code_env in self.code_envs():
+            new_envfile, new_envfilecontents = code_env.log()
+            code_envfiles.append(new_envfile)
+            code_envfilecontents.append(new_envfilecontents)
+
         return ({'task': self.description,
                  'parameters': self.parameters,
-                 'code_envfiles': [code_envfile]},
-                [code_envfilecontents])
+                 'code_envfiles': code_envfiles},
+                code_envfilecontents)
 
 
 class CodeEnv:
