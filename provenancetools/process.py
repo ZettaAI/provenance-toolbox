@@ -7,6 +7,7 @@ import git
 
 from . import utils
 
+
 CloudVolume = TypeVar('CloudVolume')
 Namespace = TypeVar('Namespace')
 CodeEnvT = TypeVar('CodeEnv')

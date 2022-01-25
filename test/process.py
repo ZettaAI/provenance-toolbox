@@ -1,14 +1,32 @@
 from provenancetools import process
+from collections import namedtuple
 import pytest
 import git
 
 
-def test_PythonGithubEnv():
+RepoInfo = namedtuple("RepoInfo", ["name", "currenthash"])
+
+
+@pytest.fixture
+def thisrepoinfo():
     repo = git.Repo('.')
+    name = 'provenance-tools'
+    currenthash = repo.commit().hexsha
 
-    env = process.PythonGithubEnv('.')
+    return RepoInfo(name, currenthash)
 
-    assert env.repo_name == 'provenance-tools'
-    assert env.commithash == '4b829ee941283ca2e8a45e7d63233144f3e225d1'
-    assert env.filename == ('provenance-tools'
-                            '_4b829ee941283ca2e8a45e7d63233144f3e225d1')
+
+@pytest.fixture
+def thisPythonGithubEnv():
+    return process.PythonGithubEnv('.')
+
+
+def test_PythonGithubEnv(thisrepoinfo, thisPythonGithubEnv):
+    assert thisPythonGithubEnv.repo_name == thisrepoinfo.name
+    assert thisPythonGithubEnv.commithash == thisrepoinfo.currenthash
+    assert thisPythonGithubEnv.filename == (f'{thisrepoinfo.name}'
+                                            f'_{thisrepoinfo.currenthash}')
+
+
+def test_logPythonGithubEnv():
+    pass
