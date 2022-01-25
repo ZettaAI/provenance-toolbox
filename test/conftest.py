@@ -52,6 +52,10 @@ def testcloudvolume_no_td():
     yield make_testcloudvolume(PATH)
 
 
+#@pytest.fixture
+#def testcloudvolume(testcloudvolume_no_td):
+#    return testcloudvolume_no_td
+
 @pytest.fixture
-def testcloudvolume(testcloudvolume_no_td):
-    return testcloudvolume_no_td
+def testcloudvolume(testcloudvolume_with_td):
+    return testcloudvolume_with_td

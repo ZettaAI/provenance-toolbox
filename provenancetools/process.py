@@ -26,7 +26,7 @@ class Process:
     def log(self) -> Tuple[Dict[str, str], List[str]]:
         '''Returns the data to log'''
         code_envfiles, code_envfilecontents = list(), list()
-        for code_env in self.code_envs():
+        for code_env in self.code_envs:
             new_envfile, new_envfilecontents = code_env.log()
             code_envfiles.append(new_envfile)
             code_envfilecontents.append(new_envfilecontents)
@@ -93,14 +93,12 @@ def repo_name_from_url(repo_url):
 
 def logprocess(cloudvolume: CloudVolume, process: Process,
                duplicate: bool = False) -> None:
-    '''Adds a documented processing step to the provenance log'''
-    provenance_dict, code_envfilecontents = process.log()
-    if process_absent(cloudvolume, process.description):
-        cloudvolume.provenance.processing.append(provenance_dict)
-        logjsonfiles(cloudvolume, provenance_dict["code_envfiles"],
-                      code_envfilecontents)
+    '''Adds a processing step to the provenance log documentation'''
+    provenance_dict, envfilecontents = process.log()
+    envfilenames = provenance_dict["code_envfiles"]
 
-    elif duplicate:
+    if duplicate or process_absent(cloudvolume, process.description):
+        logcodefiles(cloudvolume, envfilenames, envfilecontents)
         cloudvolume.provenance.processing.append(provenance_dict)
 
     else:
@@ -113,14 +111,40 @@ def logprocess(cloudvolume: CloudVolume, process: Process,
 def process_absent(cloudvolume, processname):
     'Checks whether a process has already been logged. Returns True if not'
     processes = cloudvolume.provenance.processing
-    for process in processes:
-        if "task" in process and process["task"] == processname:
-            return False
+    processnames = [process["task"] for process in processes
+                    if "task" in process]
 
-    return True
+    return processname not in processnames
+
+
+def logcodefiles(cloudvolume: CloudVolume, filenames: List[str],
+                 filecontents: List[str]) -> None:
+    '''Logs the code environment files that haven't been logged already'''
+    absentfilenames, absentfilecontents = list(), list()
+    for filename, filecontent in zip(filenames, filecontents):
+        if codefile_absent(cloudvolume, filename):
+            absentfilenames.append(filename)
+            absentfilecontents.append(filecontent)
+
+    print(f"LOGGING {len(absentfilenames)} FILES")
+    logjsonfiles(cloudvolume, absentfilenames, absentfilecontents)
+
+
+def codefile_absent(cloudvolume: CloudVolume, filename: str):
+    '''
+    Checks whether a code environment file has already been logged.
+    Returns True if not
+    '''
+    processes = cloudvolume.provenance.processing
+    codefilenames = []
+    for process in processes:
+        if "code_envfiles" in process:
+            codefilenames.extend(process["code_envfiles"])
+
+    return filename not in codefilenames
 
 
 def logjsonfiles(cloudvolume: CloudVolume, filenames: List[str],
-                  filecontents: List[str]) -> None:
+                 filecontents: List[str]) -> None:
     for filename, filecontent in zip(filenames, filecontents):
         utils.sendjsonfile(cloudvolume, filename, filecontent)

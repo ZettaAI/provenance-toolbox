@@ -1,4 +1,5 @@
 import os
+import json
 from provenancetools import process
 from collections import namedtuple
 
@@ -29,7 +30,7 @@ def thisPythonGithubEnv():
 def thisProcess(thisPythonGithubEnv):
     name = 'Adding not so useful documentation'
     parameters = {}
-    
+
     return process.Process(name, parameters, thisPythonGithubEnv)
 
 
@@ -41,7 +42,26 @@ def test_PythonGithubEnv(thisrepoinfo, thisPythonGithubEnv):
 
 
 def test_logPythonGithubEnv(testcloudvolume, thisProcess):
+    processinglength = len(testcloudvolume.provenance.processing)
     process.logprocess(testcloudvolume, thisProcess, duplicate=True)
-    
-    test_cv_name = os.path.basename(testcloudvolume.cloudpath)
-    assert os.path.exists(f"test/{test_cv_name}/provenance")
+
+    testcvname = os.path.basename(testcloudvolume.cloudpath)
+    assert os.path.exists(f"test/{testcvname}/provenance")
+
+    testprov = testcloudvolume.provenance
+    assert len(testprov.processing) == processinglength + 1
+    assert testprov.processing[-1]['task'] == thisProcess.description
+    assert testprov.processing[-1]['parameters'] == thisProcess.parameters
+    assert len(testprov.processing[-1]["code_envfiles"]) == len(thisProcess.code_envs)
+
+    testcvlocal = testcloudvolume.cloudpath.replace("file://", "")
+    codeenvfilelocal = testprov.processing[-1]["code_envfiles"][0]
+    testfile = os.path.join(testcvlocal, codeenvfilelocal)
+    thisCodeEnv = thisProcess.code_envs[0]
+
+    with open(testfile) as f:
+        content = json.load(f)
+    assert content['CodeEnvType'] == 'PythonGithub'
+    assert content['name'] == 'provenance-tools'
+    assert content['commithash'] == thisCodeEnv.commithash
+    assert content['diff'] == thisCodeEnv.diff
