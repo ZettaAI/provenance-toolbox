@@ -2,6 +2,6 @@
 from cloudfiles import CloudFiles
 
 
-def sendfile(basedir, filename, content):
-    cf = CloudFiles(basedir)
+def sendfile(cloudvolume, filename, content):
+    cf = CloudFiles(cloudvolume.cloudpath)
     cf.put(filename, content, content_type='raw')

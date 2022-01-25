@@ -16,19 +16,19 @@ CodeEnvT = TypeVar('CodeEnv')
 class Process:
     '''A representation of a process that affects a CloudVolume'''
 
-    def __init__(self, name: str, parameters: Union[dict, Namespace],
+    def __init__(self, description: str, parameters: Union[dict, Namespace],
                  code_env: CodeEnvT):
-        self.name = name
+        self.description = description
         self.parameters = parameters
         self.code_env = code_env
 
     def log(self) -> Tuple[Dict[str, str], List[str]]:
         '''Returns the data to log'''
-        codefile, codefilecontents = self.codeenv.log()
-        return ({'task': self.name,
+        code_envfile, code_envfilecontents = self.code_env.log()
+        return ({'task': self.description,
                  'parameters': self.parameters,
-                 'codefiles': [codefile]},
-                [codefilecontents])
+                 'code_envfiles': [code_envfile]},
+                [code_envfilecontents])
 
 
 class CodeEnv:
@@ -73,10 +73,11 @@ class PythonGithubEnv(CodeEnv):
         contents = dict()
 
         contents['CodeEnvType'] = 'PythonGithub'
+        contents['name'] = self.repo_name
         contents['commithash'] = self.commithash
         contents['diff'] = self.diff
 
-        return contents
+        return bytes(str(contents), 'utf-8')
 
 
 def repo_name_from_url(repo_url):
@@ -84,27 +85,37 @@ def repo_name_from_url(repo_url):
     return os.path.basename(repo_url).replace('.git', '')
 
 
-def logprocess(self, cloudvolume: CloudVolume, process: Process,
+def logprocess(cloudvolume: CloudVolume, process: Process,
                duplicate: bool = False) -> None:
     '''Adds a documented processing step to the provenance log'''
 
-    provenance_dict, extrafiles = process.log()
-    if process_absent(cloudvolume, process.name):
+    provenance_dict, code_envfilecontents = process.log()
+    if process_absent(cloudvolume, process.description):
         cloudvolume.provenance.processing.append(provenance_dict)
-        logextrafiles(cloudvolume, process.name, extrafiles)
+        logextrafiles(cloudvolume, provenance_dict["code_envfiles"],
+                      code_envfilecontents)
 
     elif duplicate:
         cloudvolume.provenance.processing.append(provenance_dict)
 
     else:
         raise AssertionError('duplicate set to False,'
-                             f' yet process {process.name} already logged')
+                             f' yet process {process.description} already logged')
 
     cloudvolume.commit_provenance()
 
 
-def logextrafiles(cloudvolume: CloudVolume, processname: str,
-                  extrafilecontents: List[str]) -> None:
-    filenames = [f'{processname}{i}' for i in range(len(extrafilecontents))]
-    for filename, extrafilecontent in zip(filenames, extrafilecontents):
-        utils.sendfile(cloudvolume, filename, extrafilecontent)
+def process_absent(cloudvolume, processname):
+    'Checks whether a process has already been logged. Returns True if not'
+    processes = cloudvolume.provenance.processing
+    for process in processes:
+        if "task" in process and process["task"] == processname:
+            return False
+
+    return True
+
+
+def logextrafiles(cloudvolume: CloudVolume, filenames: List[str],
+                  filecontents: List[str]) -> None:
+    for filename, filecontent in zip(filenames, filecontents):
+        utils.sendfile(cloudvolume, filename, filecontent)

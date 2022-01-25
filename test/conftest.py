@@ -1,8 +1,19 @@
+import os
+import glob
+import pytest
 import cloudvolume as cv
 
 
-def main():
+def removefiles(expr):
+    filenames = glob.glob(expr)
+    for filename in filenames:
+        os.remove(filename)
 
+
+@pytest.fixture
+def testcloudvolume():
+
+    path = "./test/test_cv"
     num_channels = 1
     layer_type = 'segmentation'
     data_type = 'uint32'
@@ -17,10 +28,11 @@ def main():
                encoding, resolution, voxel_offset,
                volume_size, chunk_size=chunk_size)
 
-    vol = cv.CloudVolume('file://./test_cv', mip=0, info=info)
+    vol = cv.CloudVolume(f'file://{path}', mip=0, info=info)
 
     vol.commit_info()
 
+    yield vol
 
-if __name__ == '__main__':
-    main()
+    removefiles(os.path.join(path, "*"))
+    os.rmdir(path)
