@@ -41,7 +41,7 @@ def test_PythonGithubEnv(thisrepoinfo, thisPythonGithubEnv):
 
 
 def test_logPythonGithubEnv(testcloudvolume, thisProcess):
-    process.logprocess(testcloudvolume, thisProcess)
+    process.logprocess(testcloudvolume, thisProcess, duplicate=True)
     
     test_cv_name = os.path.basename(testcloudvolume.cloudpath)
     assert os.path.exists(f"test/{test_cv_name}/provenance")

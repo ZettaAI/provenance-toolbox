@@ -1,6 +1,7 @@
 '''
 '''
 import os
+import json
 from typing import TypeVar, Union, List, Tuple, Dict
 
 import git
@@ -77,7 +78,7 @@ class PythonGithubEnv(CodeEnv):
         contents['commithash'] = self.commithash
         contents['diff'] = self.diff
 
-        return bytes(str(contents), 'utf-8')
+        return json.dumps(contents)
 
 
 def repo_name_from_url(repo_url):
@@ -88,11 +89,10 @@ def repo_name_from_url(repo_url):
 def logprocess(cloudvolume: CloudVolume, process: Process,
                duplicate: bool = False) -> None:
     '''Adds a documented processing step to the provenance log'''
-
     provenance_dict, code_envfilecontents = process.log()
     if process_absent(cloudvolume, process.description):
         cloudvolume.provenance.processing.append(provenance_dict)
-        logextrafiles(cloudvolume, provenance_dict["code_envfiles"],
+        logjsonfiles(cloudvolume, provenance_dict["code_envfiles"],
                       code_envfilecontents)
 
     elif duplicate:
@@ -115,7 +115,7 @@ def process_absent(cloudvolume, processname):
     return True
 
 
-def logextrafiles(cloudvolume: CloudVolume, filenames: List[str],
+def logjsonfiles(cloudvolume: CloudVolume, filenames: List[str],
                   filecontents: List[str]) -> None:
     for filename, filecontent in zip(filenames, filecontents):
-        utils.sendfile(cloudvolume, filename, filecontent)
+        utils.sendjsonfile(cloudvolume, filename, filecontent)

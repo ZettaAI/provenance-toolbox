@@ -4,16 +4,13 @@ import pytest
 import cloudvolume as cv
 
 
-def removefiles(expr):
-    filenames = glob.glob(expr)
-    for filename in filenames:
-        os.remove(filename)
+PATH = "./test/test_cv"
 
 
-@pytest.fixture
-def testcloudvolume():
 
-    path = "./test/test_cv"
+
+def make_testcloudvolume(path):
+
     num_channels = 1
     layer_type = 'segmentation'
     data_type = 'uint32'
@@ -32,7 +29,32 @@ def testcloudvolume():
 
     vol.commit_info()
 
-    yield vol
+    return vol
 
+    
+def removefiles(expr):
+    filenames = glob.glob(expr)
+    for filename in filenames:
+        os.remove(filename)
+
+
+def teardown(path):
     removefiles(os.path.join(path, "*"))
     os.rmdir(path)
+
+
+@pytest.fixture
+def testcloudvolume_with_td():
+    yield make_testcloudvolume(PATH)
+
+    teardown(PATH)
+
+
+@pytest.fixture
+def testcloudvolume_no_td():
+    yield make_testcloudvolume(PATH)
+
+
+@pytest.fixture
+def testcloudvolume(testcloudvolume_no_td):
+    return testcloudvolume_no_td
