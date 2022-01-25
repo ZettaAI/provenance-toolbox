@@ -4,6 +4,7 @@ import os
 import json
 from typing import TypeVar, Union, List, Tuple, Dict
 
+import pkg_resources
 import git
 
 from . import utils
@@ -75,13 +76,19 @@ class PythonGithubEnv(CodeEnv):
         return self.repo.git.diff()
 
     @property
+    def packagelist(self):
+        return [(p.project_name, p.version)
+                for p in pkg_resources.working_set]
+
+    @property
     def contents(self):
         contents = dict()
 
-        contents['CodeEnvType'] = 'PythonGithub'
         contents['name'] = self.repo_name
+        contents['CodeEnvType'] = 'PythonGithub'
         contents['commithash'] = self.commithash
         contents['diff'] = self.diff
+        contents['packages'] = self.packagelist
 
         return json.dumps(contents)
 
