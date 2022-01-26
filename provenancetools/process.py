@@ -48,29 +48,40 @@ class Process:
 
 
 class CodeEnv:
-    '''A representation of a code environment'''
-    def __init__(self, codeptr: List[str]):
+    '''A representation of a code environment - largely a virtual class'''
+    def __init__(self, codeptr: str):
         self.codeptr = codeptr
 
     def log(self) -> Tuple[str, str]:
+        '''
+        Logging a code environment consists of specifying a
+        "code environment file" that contains all of the required
+        information to recover the environment. This method
+        should collect that information from any subclass.
+        '''
         return self.filename, self.contents
 
     @property
     def filename(self):
         raise NotImplementedError
 
+    @property
+    def contents(self):
+        raise NotImplementedError
+
 
 class PythonGithubEnv(CodeEnv):
+    '''
+    A representation of a code environment specified by a python
+    environment and github repo.
+    '''
     def __init__(self, codeptr: str):
         self.codeptr = codeptr
         self.repo = git.Repo(codeptr)
 
     @property
-    def filename(self) -> str:
-        return f'{self.repo_name}_{self.commithash}'
-
-    @property
     def repo_name(self) -> str:
+        'The name of the github repo'
         cfg = self.repo.config_reader()
         url = cfg.get('remote "origin"', 'url')
 
@@ -78,19 +89,28 @@ class PythonGithubEnv(CodeEnv):
 
     @property
     def commithash(self) -> str:
+        'The hash of the current commit of the github repo'
         return self.repo.commit().hexsha
 
     @property
     def diff(self) -> str:
+        'The uncommitted code changes within the current environment'
         return self.repo.git.diff()
 
     @property
     def packagelist(self) -> List[Tuple[str, str]]:
+        'The environment of python packages'
         return [(p.project_name, p.version)
                 for p in pkg_resources.working_set]
 
     @property
+    def filename(self) -> str:
+        'The code environment filename to store alongside the provenance file'
+        return f'{self.repo_name}_{self.commithash}'
+
+    @property
     def contents(self) -> str:
+        'The contents of the code environment file'
         contents = dict()
 
         contents['name'] = self.repo_name
