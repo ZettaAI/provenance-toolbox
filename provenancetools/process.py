@@ -21,8 +21,6 @@ CodeEnvT = TypeVar('CodeEnv')
 class Process:
     '''
     A representation of a process that affects a CloudVolume
-
-
     '''
 
     def __init__(self,
@@ -114,8 +112,8 @@ class PythonGithubEnv(CodeEnv):
         contents = dict()
 
         contents['name'] = self.repo_name
-        contents['CodeEnvType'] = 'PythonGithub'
-        contents['commithash'] = self.commithash
+        contents['CodeEnv type'] = 'PythonGithub'
+        contents['commit hash'] = self.commithash
         contents['diff'] = self.diff
         contents['packages'] = self.packagelist
 
@@ -125,6 +123,32 @@ class PythonGithubEnv(CodeEnv):
 def repo_name_from_url(repo_url: str) -> str:
     '''Extracts the bare repo-name from a URL'''
     return os.path.basename(repo_url).replace('.git', '')
+
+
+class DockerEnv(CodeEnv):
+    '''
+    A representation of a code environment specified by a 
+    docker image and tag.
+    '''
+    def __init__(self, imagename: str, tag: str):
+        self.imagename = imagename
+        self.tag = tag
+
+    @property
+    def filename(self) -> str:
+        'The code environment filename to store alongside the provenance file'
+        # need to replace '/' with something else to avoid creating extra
+        # directories
+        return f"{self.imagename.replace('/','_')}_{self.tag}"
+
+    @property
+    def contents(self) -> str:
+        'The contents of the code environment file'
+        return json.dumps(
+                {"CodeEnv type": 'Docker',
+                 "image name": self.imagename,
+                 "tag": self.tag}
+                )
 
 
 def logprocess(cloudvolume: CloudVolume,
@@ -167,7 +191,6 @@ def logcodefiles(cloudvolume: CloudVolume,
             absentfilenames.append(filename)
             absentfilecontents.append(filecontent)
 
-    print(f"LOGGING {len(absentfilenames)} FILES")
     logjsonfiles(cloudvolume, absentfilenames, absentfilecontents)
 
 
