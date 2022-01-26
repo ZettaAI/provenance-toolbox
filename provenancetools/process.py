@@ -30,6 +30,8 @@ class Process:
 
     def log(self) -> Tuple[Dict[str, str], List[str]]:
         'Returns the data to log'
+        params = self.logparams()
+
         code_envfiles, code_envfilecontents = list(), list()
         for code_env in self.code_envs:
             new_envfile, new_envfilecontents = code_env.log()
@@ -37,13 +39,24 @@ class Process:
             code_envfilecontents.append(new_envfilecontents)
 
         return ({'task': self.description,
-                 'parameters': self.parameters,
+                 'parameters': params,
                  'code_envfiles': code_envfiles},
                 code_envfilecontents)
 
+    def logparams(self) -> dict:
+        if isinstance(self.parameters, dict):
+            return self.parameters
+        elif type(self.parameters) in [SimpleNamespace, ConfigParser]:
+            return vars(self.parameters)
+        else:
+            raise NotImplementedError('parameter object for process'
+                                      f'"{self.description}" has type '
+                                      f'{type(self.parameters)},'
+                                      ' which is not currently supported')
+
 
 class CodeEnv:
-    'A representation of a code environment - largely a virtual class'
+    'A representation of a code environment - a virtual class'
     def __init__(self, codeptr: str):
         self.codeptr = codeptr
 
