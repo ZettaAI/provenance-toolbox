@@ -15,6 +15,7 @@ SYNAPTOR_DESC = 'Doing something with the Synaptor docker container'
 SYNAPTOR_PARAMS = {}
 SYNAPTOR_IMAGE = 'zettaai/synaptor'
 SYNAPTOR_TAG = 'floatresolutions'
+SYNAPTOR_ID = 'c64d9d42ac38'
 
 
 @pytest.fixture
@@ -44,7 +45,7 @@ def thisProcess(thisPythonGithubEnv):
 
 @pytest.fixture
 def SynaptorDockerEnv():
-    return process.DockerEnv(SYNAPTOR_IMAGE, SYNAPTOR_TAG)
+    return process.DockerEnv(SYNAPTOR_IMAGE, SYNAPTOR_TAG, SYNAPTOR_ID)
 
 
 @pytest.fixture
@@ -120,3 +121,4 @@ def test_logDockerEnv(testcloudvolume, SynaptorDockerProcess):
     assert content['CodeEnv type'] == 'Docker'
     assert content['image name'] == testCodeEnv.imagename
     assert content['tag'] == testCodeEnv.tag
+    assert content['container ID'] == testCodeEnv.containerID

@@ -140,9 +140,10 @@ class DockerEnv(CodeEnv):
     A representation of a code environment specified by a 
     docker image and tag.
     '''
-    def __init__(self, imagename: str, tag: str):
+    def __init__(self, imagename: str, tag: str, containerID: str):
         self.imagename = imagename
         self.tag = tag
+        self.containerID = containerID
 
     @property
     def filename(self) -> str:
@@ -157,7 +158,8 @@ class DockerEnv(CodeEnv):
         return json.dumps(
                 {"CodeEnv type": 'Docker',
                  "image name": self.imagename,
-                 "tag": self.tag}
+                 "tag": self.tag,
+                 "container ID": self.containerID}
                 )
 
 
