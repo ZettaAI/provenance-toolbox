@@ -1,4 +1,7 @@
 '''
+process.py
+
+Storage of a processing step (process) along with its code environments.
 '''
 import os
 import json
@@ -16,9 +19,15 @@ CodeEnvT = TypeVar('CodeEnv')
 
 
 class Process:
-    '''A representation of a process that affects a CloudVolume'''
+    '''
+    A representation of a process that affects a CloudVolume
 
-    def __init__(self, description: str, parameters: Union[dict, Namespace],
+
+    '''
+
+    def __init__(self,
+                 description: str,
+                 parameters: Union[dict, Namespace],
                  *code_envs: List[CodeEnvT]):
         self.description = description
         self.parameters = parameters
@@ -57,31 +66,31 @@ class PythonGithubEnv(CodeEnv):
         self.repo = git.Repo(codeptr)
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         return f'{self.repo_name}_{self.commithash}'
 
     @property
-    def repo_name(self):
+    def repo_name(self) -> str:
         cfg = self.repo.config_reader()
         url = cfg.get('remote "origin"', 'url')
 
         return repo_name_from_url(url)
 
     @property
-    def commithash(self):
+    def commithash(self) -> str:
         return self.repo.commit().hexsha
 
     @property
-    def diff(self):
+    def diff(self) -> str:
         return self.repo.git.diff()
 
     @property
-    def packagelist(self):
+    def packagelist(self) -> List[Tuple[str, str]]:
         return [(p.project_name, p.version)
                 for p in pkg_resources.working_set]
 
     @property
-    def contents(self):
+    def contents(self) -> str:
         contents = dict()
 
         contents['name'] = self.repo_name
@@ -93,13 +102,15 @@ class PythonGithubEnv(CodeEnv):
         return json.dumps(contents)
 
 
-def repo_name_from_url(repo_url):
+def repo_name_from_url(repo_url: str) -> str:
     '''Extracts the bare repo-name from a URL'''
     return os.path.basename(repo_url).replace('.git', '')
 
 
-def logprocess(cloudvolume: CloudVolume, process: Process,
-               duplicate: bool = False) -> None:
+def logprocess(cloudvolume: CloudVolume,
+               process: Process,
+               duplicate: bool = False
+               ) -> None:
     '''Adds a processing step to the provenance log documentation'''
     provenance_dict, envfilecontents = process.log()
     envfilenames = provenance_dict["code_envfiles"]
@@ -110,12 +121,13 @@ def logprocess(cloudvolume: CloudVolume, process: Process,
 
     else:
         raise AssertionError('duplicate set to False,'
-                             f' yet process {process.description} already logged')
+                             f' and process {process.description}'
+                             'has already been logged')
 
     cloudvolume.commit_provenance()
 
 
-def process_absent(cloudvolume, processname):
+def process_absent(cloudvolume: CloudVolume, processname: str) -> bool:
     'Checks whether a process has already been logged. Returns True if not'
     processes = cloudvolume.provenance.processing
     processnames = [process["task"] for process in processes
@@ -124,8 +136,10 @@ def process_absent(cloudvolume, processname):
     return processname not in processnames
 
 
-def logcodefiles(cloudvolume: CloudVolume, filenames: List[str],
-                 filecontents: List[str]) -> None:
+def logcodefiles(cloudvolume: CloudVolume,
+                 filenames: List[str],
+                 filecontents: List[str]
+                 ) -> None:
     '''Logs the code environment files that haven't been logged already'''
     absentfilenames, absentfilecontents = list(), list()
     for filename, filecontent in zip(filenames, filecontents):
@@ -137,7 +151,7 @@ def logcodefiles(cloudvolume: CloudVolume, filenames: List[str],
     logjsonfiles(cloudvolume, absentfilenames, absentfilecontents)
 
 
-def codefile_absent(cloudvolume: CloudVolume, filename: str):
+def codefile_absent(cloudvolume: CloudVolume, filename: str) -> bool:
     '''
     Checks whether a code environment file has already been logged.
     Returns True if not
@@ -151,7 +165,10 @@ def codefile_absent(cloudvolume: CloudVolume, filename: str):
     return filename not in codefilenames
 
 
-def logjsonfiles(cloudvolume: CloudVolume, filenames: List[str],
-                 filecontents: List[str]) -> None:
+def logjsonfiles(cloudvolume: CloudVolume,
+                 filenames: List[str],
+                 filecontents: List[str]
+                 ) -> None:
+    'Stores extra JSON files alongside a provenance file'
     for filename, filecontent in zip(filenames, filecontents):
         utils.sendjsonfile(cloudvolume, filename, filecontent)
