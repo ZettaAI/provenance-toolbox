@@ -19,10 +19,7 @@ CodeEnvT = TypeVar('CodeEnv')
 
 
 class Process:
-    '''
-    A representation of a process that affects a CloudVolume
-    '''
-
+    'A representation of a process that affects a CloudVolume'
     def __init__(self,
                  description: str,
                  parameters: Union[dict, Namespace],
@@ -32,7 +29,7 @@ class Process:
         self.code_envs = code_envs
 
     def log(self) -> Tuple[Dict[str, str], List[str]]:
-        '''Returns the data to log'''
+        'Returns the data to log'
         code_envfiles, code_envfilecontents = list(), list()
         for code_env in self.code_envs:
             new_envfile, new_envfilecontents = code_env.log()
@@ -46,7 +43,7 @@ class Process:
 
 
 class CodeEnv:
-    '''A representation of a code environment - largely a virtual class'''
+    'A representation of a code environment - largely a virtual class'
     def __init__(self, codeptr: str):
         self.codeptr = codeptr
 
@@ -121,7 +118,7 @@ class PythonGithubEnv(CodeEnv):
 
 
 def repo_name_from_url(repo_url: str) -> str:
-    '''Extracts the bare repo-name from a URL'''
+    'Extracts the bare repo-name from a URL'
     return os.path.basename(repo_url).replace('.git', '')
 
 
@@ -155,7 +152,7 @@ def logprocess(cloudvolume: CloudVolume,
                process: Process,
                duplicate: bool = False
                ) -> None:
-    '''Adds a processing step to the provenance log documentation'''
+    'Adds a processing step to the provenance log documentation'
     provenance_dict, envfilecontents = process.log()
     envfilenames = provenance_dict["code_envfiles"]
 

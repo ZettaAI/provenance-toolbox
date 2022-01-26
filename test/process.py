@@ -9,12 +9,12 @@ import git
 import cloudvolume as cv
 
 
-RepoInfo = namedtuple("RepoInfo", ["name", "currenthash"])
+RepoInfo = namedtuple('RepoInfo', ['name', 'currenthash'])
 
 SYNAPTOR_DESC = 'Doing something with the Synaptor docker container'
 SYNAPTOR_PARAMS = {}
-SYNAPTOR_IMAGE = "zettaai/synaptor"
-SYNAPTOR_TAG = "floatresolutions"
+SYNAPTOR_IMAGE = 'zettaai/synaptor'
+SYNAPTOR_TAG = 'floatresolutions'
 
 
 @pytest.fixture
@@ -62,7 +62,7 @@ def test_PythonGithubEnv(thisrepoinfo, thisPythonGithubEnv):
 
 
 def basicProcessTests(testcloudvolume, testprocess):
-    '''Some basic tests for any kind of process'''
+    'Some basic tests for any kind of process'
     origprocessinglength = len(testcloudvolume.provenance.processing)
 
     process.logprocess(testcloudvolume, testprocess)
@@ -84,7 +84,7 @@ def basicProcessTests(testcloudvolume, testprocess):
 
 
 def readNewestCodeEnvFile(testcloudvolume, i):
-    '''Reads the content of the newest code environment file at index i'''
+    'Reads the content of the newest code environment file at index i'
     testcvlocal = testcloudvolume.cloudpath.replace("file://", "")
     provenance = testcloudvolume.provenance
     codeenvfilelocal = provenance.processing[-1]["code_envfiles"][i]
@@ -109,7 +109,7 @@ def test_logPythonGithubEnv(testcloudvolume, thisProcess):
 
 
 def test_logDockerEnv(testcloudvolume, SynaptorDockerProcess):
-    '''Tests for logging DockerEnv processes'''
+    'Tests for logging DockerEnv processes'
     basicProcessTests(testcloudvolume, SynaptorDockerProcess)
 
     # Does the code environment file store the correct information?
