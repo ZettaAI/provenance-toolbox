@@ -18,6 +18,10 @@ Namespace = TypeVar('Namespace')
 CodeEnvT = TypeVar('CodeEnv')
 
 
+__all__ = ['Process', 'PythonGithubEnv', 'DockerEnv',
+           'logprocess', 'process_absent']
+
+
 class Process:
     'A representation of a process that affects a CloudVolume'
     def __init__(self,
