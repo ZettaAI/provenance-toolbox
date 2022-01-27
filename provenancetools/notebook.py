@@ -15,6 +15,9 @@ NoteTypeT = TypeVar('NoteType')
 NOTE_SEP = ' \n '
 FIELD_SEP = ';'
 
+__all__ = ['parsenotes', 'note_absent'
+           'addmotivation', 'addresult', 'addgeneric']
+
 
 class NoteType(Enum):
     MOTIVATION = 1
@@ -48,7 +51,8 @@ class Note:
 
 def parsenotes(cloudvolume: CloudVolume,
                note_sep: str = NOTE_SEP,
-               field_sep: str = FIELD_SEP) -> List[NoteT]:
+               field_sep: str = FIELD_SEP
+               ) -> List[NoteT]:
     '''
     Parses the notes present in a provenance file. Creates generic notes
     for text not added by this package (or using other separators, etc.).
@@ -120,3 +124,26 @@ def addgeneric(cloudvolume: CloudVolume,
     'Adds a GENERIC note to a CloudVolume'
     addnote(cloudvolume, NoteType.GENERIC, content,
             timestamp, note_sep, field_sep)
+
+
+def note_absent(cloudvolume: CloudVolume,
+                content: str,
+                note_type: Optional[NoteTypeT] = None
+                ) -> bool:
+    '''
+    Checks whether a note has already been added to the description.
+    Returns True if not.
+    '''
+    notes = parsenotes(cloudvolume)
+
+    def same_note(note1: NoteT,
+                  content: str,
+                  note_type: Optional[NoteTypeT] = None
+                  ) -> bool:
+        return (note1.content == content
+                and (note_type is not None and note1.note_type == note_type))
+
+    filtered = [note for note in notes
+                if same_note(note, content, note_type)]
+
+    return len(filtered) == 0
