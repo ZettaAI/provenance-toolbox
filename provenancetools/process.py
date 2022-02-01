@@ -3,38 +3,59 @@ process.py
 
 Storage of a processing step (process) along with its code environments.
 '''
+from __future__ import annotations
+
 import os
 import json
-from typing import TypeVar, Union, List, Tuple, Dict
+from typing import Union
 from types import SimpleNamespace
 from configparser import ConfigParser
 
 import pkg_resources
 import git
+import cloudvolume as cv
 
 from . import utils
-
-
-CloudVolume = TypeVar('CloudVolume')
-Namespace = TypeVar('Namespace')
-CodeEnvT = TypeVar('CodeEnv')
 
 
 __all__ = ['Process', 'PythonGithubEnv', 'DockerEnv',
            'logprocess', 'process_absent']
 
 
+class CodeEnv:
+    'A representation of a code environment - a virtual class'
+    def __init__(self, codeptr: str):
+        self.codeptr = codeptr
+
+    def log(self) -> tuple[str, str]:
+        '''
+        Logging a code environment consists of specifying a
+        "code environment file" that contains all of the required
+        information to recover the environment. This method
+        should collect that information from any subclass.
+        '''
+        return self.filename, self.contents
+
+    @property
+    def filename(self):
+        raise NotImplementedError
+
+    @property
+    def contents(self):
+        raise NotImplementedError
+
+
 class Process:
     'A representation of a process that affects a CloudVolume'
     def __init__(self,
                  description: str,
-                 parameters: Union[dict, Namespace],
-                 *code_envs: List[CodeEnvT]):
+                 parameters: Union[dict, SimpleNamespace, ConfigParser],
+                 *code_envs: list[CodeEnv]):
         self.description = description
         self.parameters = parameters
         self.code_envs = code_envs
 
-    def log(self) -> Tuple[Dict[str, str], List[str]]:
+    def log(self) -> tuple[dict[str, str], list[str]]:
         'Returns the data to log'
         params = self.logparams()
 
@@ -59,29 +80,6 @@ class Process:
                                       f'"{self.description}" has type '
                                       f'{type(self.parameters)},'
                                       ' which is not currently supported')
-
-
-class CodeEnv:
-    'A representation of a code environment - a virtual class'
-    def __init__(self, codeptr: str):
-        self.codeptr = codeptr
-
-    def log(self) -> Tuple[str, str]:
-        '''
-        Logging a code environment consists of specifying a
-        "code environment file" that contains all of the required
-        information to recover the environment. This method
-        should collect that information from any subclass.
-        '''
-        return self.filename, self.contents
-
-    @property
-    def filename(self):
-        raise NotImplementedError
-
-    @property
-    def contents(self):
-        raise NotImplementedError
 
 
 class PythonGithubEnv(CodeEnv):
@@ -112,7 +110,7 @@ class PythonGithubEnv(CodeEnv):
         return self.repo.git.diff()
 
     @property
-    def packagelist(self) -> List[Tuple[str, str]]:
+    def packagelist(self) -> list[tuple[str, str]]:
         'The environment of python packages'
         return [(p.project_name, p.version)
                 for p in pkg_resources.working_set]
@@ -180,13 +178,13 @@ class DockerEnv(CodeEnv):
         return json.dumps(contents_dict)
 
     @property
-    def packagelist(self) -> List[Tuple[str, str]]:
+    def packagelist(self) -> list[tuple[str, str]]:
         'The environment of python packages'
         return [(p.project_name, p.version)
                 for p in pkg_resources.working_set]
 
 
-def logprocess(cloudvolume: CloudVolume,
+def logprocess(cloudvolume: cv.CloudVolume,
                process: Process,
                duplicate: bool = False
                ) -> None:
@@ -206,7 +204,7 @@ def logprocess(cloudvolume: CloudVolume,
     cloudvolume.commit_provenance()
 
 
-def process_absent(cloudvolume: CloudVolume, processname: str) -> bool:
+def process_absent(cloudvolume: cv.CloudVolume, processname: str) -> bool:
     'Checks whether a process has already been logged. Returns True if not'
     processes = cloudvolume.provenance.processing
     processnames = [process['task'] for process in processes
@@ -215,9 +213,9 @@ def process_absent(cloudvolume: CloudVolume, processname: str) -> bool:
     return processname not in processnames
 
 
-def logcodefiles(cloudvolume: CloudVolume,
-                 filenames: List[str],
-                 filecontents: List[str]
+def logcodefiles(cloudvolume: cv.CloudVolume,
+                 filenames: list[str],
+                 filecontents: list[str]
                  ) -> None:
     '''Logs the code environment files that haven't been logged already'''
     absentfilenames, absentfilecontents = list(), list()
@@ -229,7 +227,7 @@ def logcodefiles(cloudvolume: CloudVolume,
     logjsonfiles(cloudvolume, absentfilenames, absentfilecontents)
 
 
-def codefile_absent(cloudvolume: CloudVolume, filename: str) -> bool:
+def codefile_absent(cloudvolume: cv.CloudVolume, filename: str) -> bool:
     '''
     Checks whether a code environment file has already been logged.
     Returns True if not
@@ -243,9 +241,9 @@ def codefile_absent(cloudvolume: CloudVolume, filename: str) -> bool:
     return filename not in codefilenames
 
 
-def logjsonfiles(cloudvolume: CloudVolume,
-                 filenames: List[str],
-                 filecontents: List[str]
+def logjsonfiles(cloudvolume: cv.CloudVolume,
+                 filenames: list[str],
+                 filecontents: list[str]
                  ) -> None:
     'Stores extra JSON files alongside a provenance file'
     for filename, filecontent in zip(filenames, filecontents):

@@ -1,16 +1,17 @@
 '''
+notebook.py
+
 Lab notebook functions for storing useful information in
 CloudVolume provenance files
 '''
+from __future__ import annotations
+
 import datetime
 from enum import Enum
-from typing import TypeVar, Optional, Union, List
+from typing import Optional, Union
 
+import cloudvolume as cv
 
-CloudVolume = TypeVar('CloudVolume')
-Timestamp = TypeVar('Timestamp')
-NoteT = TypeVar('Note')
-NoteTypeT = TypeVar('NoteType')
 
 NOTE_SEP = ' \n '
 FIELD_SEP = ';'
@@ -28,8 +29,8 @@ class NoteType(Enum):
 class Note:
     'A representation of a note added to a provenance file'
     def __init__(self,
-                 timestamp: Union[Timestamp, str],
-                 note_type: Union[NoteTypeT, int],
+                 timestamp: Union[datetime.datetime, str],
+                 note_type: Union[NoteType, int],
                  content: str
                  ):
         if (timestamp is not None
@@ -49,10 +50,10 @@ class Note:
                 f"{str(self.content)}")
 
 
-def parsenotes(cloudvolume: CloudVolume,
+def parsenotes(cloudvolume: cv.CloudVolume,
                note_sep: str = NOTE_SEP,
                field_sep: str = FIELD_SEP
-               ) -> List[NoteT]:
+               ) -> list[Note]:
     '''
     Parses the notes present in a provenance file. Creates generic notes
     for text not added by this package (or using other separators, etc.).
@@ -74,10 +75,10 @@ def parsenotes(cloudvolume: CloudVolume,
     return notes
 
 
-def addnote(cloudvolume: CloudVolume,
-            note_type: NoteTypeT,
+def addnote(cloudvolume: cv.CloudVolume,
+            note_type: NoteType,
             content: str,
-            timestamp: Optional[Timestamp] = None,
+            timestamp: Optional[Union[datetime.datetime, str]] = None,
             note_sep: str = NOTE_SEP,
             field_sep: str = FIELD_SEP
             ) -> None:
@@ -93,9 +94,9 @@ def addnote(cloudvolume: CloudVolume,
     cloudvolume.commit_provenance()
 
 
-def addmotivation(cloudvolume: CloudVolume,
+def addmotivation(cloudvolume: cv.CloudVolume,
                   content: str,
-                  timestamp: Optional[Timestamp] = None,
+                  timestamp: Optional[Union[datetime.datetime, str]] = None,
                   note_sep: str = NOTE_SEP,
                   field_sep: str = FIELD_SEP
                   ) -> None:
@@ -104,9 +105,9 @@ def addmotivation(cloudvolume: CloudVolume,
             timestamp, note_sep, field_sep)
 
 
-def addresult(cloudvolume: CloudVolume,
+def addresult(cloudvolume: cv.CloudVolume,
               content: str,
-              timestamp: Optional[Timestamp] = None,
+              timestamp: Optional[Union[datetime.datetime, str]] = None,
               note_sep: str = NOTE_SEP,
               field_sep: str = FIELD_SEP
               ) -> None:
@@ -115,9 +116,9 @@ def addresult(cloudvolume: CloudVolume,
             timestamp, note_sep, field_sep)
 
 
-def addgeneric(cloudvolume: CloudVolume,
+def addgeneric(cloudvolume: cv.CloudVolume,
                content: str,
-               timestamp: Optional[Timestamp] = None,
+               timestamp: Optional[Union[datetime.datetime, str]] = None,
                note_sep: str = NOTE_SEP,
                field_sep: str = FIELD_SEP
                ) -> None:
@@ -126,9 +127,9 @@ def addgeneric(cloudvolume: CloudVolume,
             timestamp, note_sep, field_sep)
 
 
-def note_absent(cloudvolume: CloudVolume,
+def note_absent(cloudvolume: cv.CloudVolume,
                 content: str,
-                note_type: Optional[NoteTypeT] = None
+                note_type: Optional[NoteType] = None
                 ) -> bool:
     '''
     Checks whether a note has already been added to the description.
@@ -136,9 +137,9 @@ def note_absent(cloudvolume: CloudVolume,
     '''
     notes = parsenotes(cloudvolume)
 
-    def same_note(note1: NoteT,
+    def same_note(note1: Note,
                   content: str,
-                  note_type: Optional[NoteTypeT] = None
+                  note_type: Optional[NoteType] = None
                   ) -> bool:
         return (note1.content == content
                 and (note_type is not None and note1.note_type == note_type))
