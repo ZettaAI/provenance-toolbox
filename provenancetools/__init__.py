@@ -6,4 +6,5 @@ from . import notebook
 from .notebook import parsenotes, note_absent
 from .notebook import addmotivation, addresult, addgeneric
 
+from . import utils
 from .utils import dockerimageID
