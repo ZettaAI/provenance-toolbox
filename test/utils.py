@@ -4,7 +4,7 @@ import json
 import pytest
 import docker
 
-from provenancetools import utils
+from provenancetoolbox import utils
 
 
 def test_sendjsonfile(testcloudvolume):

@@ -7,7 +7,7 @@ __version__ = "0.1.0"
 
 
 setup(
-    name='provenance-tools',
+    name='provenancetoolbox',
     version=__version__,
     description=('Some basic utilities to standardize the use'
                  ' of CloudVolume provenance files'),

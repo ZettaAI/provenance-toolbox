@@ -1,6 +1,6 @@
 import os
 import json
-from provenancetools import process
+from provenancetoolbox import process
 from collections import namedtuple
 
 import pytest

@@ -1,3 +1,5 @@
+__version__ = '0.1.0'
+
 from . import process
 from .process import Process, PythonGithubEnv, DockerEnv
 from .process import logprocess, process_absent

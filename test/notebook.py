@@ -1,6 +1,6 @@
 import os
 import datetime
-from provenancetools import notebook
+from provenancetoolbox import notebook
 
 import pytest
 
