@@ -32,15 +32,15 @@ description = 'Properly documenting a process
 parameters = {'prudence': 10/10}
 code_env = pt.PythonGithubEnv('.')  # path to the github repo directory
 
-demoprocess = Process(description, parameters, code_env)
+demoprocess = pt.Process(description, parameters, code_env)
 
-logprocess(cloudvolume, process)
+logprocess(cloudvolume, demoprocess)
 ```
 Metadata about processes are logged in the provenance file of a given cloudvolume, and each code evironment is stored in separate code environment JSON files alongside the provenance file.
 
 The `Note` objects are often handled implicitly in the background for you
 ```python3
-addmotivation(cloudvolume, "Bootstrapping ground truth: adding segments 19&34")
-addresult(cloudvolume, "Found more synapses")
-addgeneric(cloudvolume, "Bizarre output in slice 37")
+pt.addmotivation(cloudvolume, "Bootstrapping: adding segments 19&34")
+pt.addresult(cloudvolume, "Found more synapses")
+pt.addgeneric(cloudvolume, "Bizarre output in slice 37")
 ```
