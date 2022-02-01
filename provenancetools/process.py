@@ -6,6 +6,8 @@ Storage of a processing step (process) along with its code environments.
 import os
 import json
 from typing import TypeVar, Union, List, Tuple, Dict
+from types import SimpleNamespace
+from configparser import ConfigParser
 
 import pkg_resources
 import git
@@ -141,7 +143,7 @@ def repo_name_from_url(repo_url: str) -> str:
 
 class DockerEnv(CodeEnv):
     '''
-    A representation of a code environment specified by a 
+    A representation of a code environment specified by a
     docker image and tag.
     '''
     def __init__(self,
@@ -159,8 +161,8 @@ class DockerEnv(CodeEnv):
         'The code environment filename to store alongside the provenance file'
         # need to replace '/' with something else to avoid creating extra
         # directories
-        return (f'{self.imagename.replace("/","_")}'
-                f'_{self.imageID.replace(":","")}')
+        return (f'{self.imagename.replace("/", "_")}'
+                f'_{self.imageID.replace(":", "")}')
 
     @property
     def contents(self) -> str:

@@ -15,7 +15,7 @@ NoteTypeT = TypeVar('NoteType')
 NOTE_SEP = ' \n '
 FIELD_SEP = ';'
 
-__all__ = ['parsenotes', 'note_absent'
+__all__ = ['parsenotes', 'note_absent',
            'addmotivation', 'addresult', 'addgeneric']
 
 
