@@ -45,43 +45,6 @@ class CodeEnv:
         raise NotImplementedError
 
 
-class Process:
-    'A representation of a process that affects a CloudVolume'
-    def __init__(self,
-                 description: str,
-                 parameters: Union[dict, SimpleNamespace, ConfigParser],
-                 *code_envs: list[CodeEnv]):
-        self.description = description
-        self.parameters = parameters
-        self.code_envs = code_envs
-
-    def log(self) -> tuple[dict[str, str], list[str]]:
-        'Returns the data to log'
-        params = self.logparams()
-
-        code_envfiles, code_envfilecontents = list(), list()
-        for code_env in self.code_envs:
-            new_envfile, new_envfilecontents = code_env.log()
-            code_envfiles.append(new_envfile)
-            code_envfilecontents.append(new_envfilecontents)
-
-        return ({'task': self.description,
-                 'parameters': params,
-                 'code_envfiles': code_envfiles},
-                code_envfilecontents)
-
-    def logparams(self) -> dict:
-        if isinstance(self.parameters, dict):
-            return self.parameters
-        elif type(self.parameters) in [SimpleNamespace, ConfigParser]:
-            return vars(self.parameters)
-        else:
-            raise NotImplementedError('parameter object for process'
-                                      f'"{self.description}" has type '
-                                      f'{type(self.parameters)},'
-                                      ' which is not currently supported')
-
-
 class PythonGithubEnv(CodeEnv):
     '''
     A representation of a code environment specified by a python
@@ -184,6 +147,43 @@ class DockerEnv(CodeEnv):
                 for p in pkg_resources.working_set]
 
 
+class Process:
+    'A representation of a process that affects a CloudVolume'
+    def __init__(self,
+                 description: str,
+                 parameters: Union[dict, SimpleNamespace, ConfigParser],
+                 *code_envs: list[CodeEnv]):
+        self.description = description
+        self.parameters = parameters
+        self.code_envs = code_envs
+
+    def log(self) -> tuple[dict[str, str], list[str]]:
+        'Returns the data to log'
+        params = self.logparams()
+
+        code_envfiles, code_envfilecontents = list(), list()
+        for code_env in self.code_envs:
+            new_envfile, new_envfilecontents = code_env.log()
+            code_envfiles.append(new_envfile)
+            code_envfilecontents.append(new_envfilecontents)
+
+        return ({'task': self.description,
+                 'parameters': params,
+                 'code_envfiles': code_envfiles},
+                code_envfilecontents)
+
+    def logparams(self) -> dict:
+        if isinstance(self.parameters, dict):
+            return self.parameters
+        elif type(self.parameters) in [SimpleNamespace, ConfigParser]:
+            return vars(self.parameters)
+        else:
+            raise NotImplementedError('parameter object for process'
+                                      f'"{self.description}" has type '
+                                      f'{type(self.parameters)},'
+                                      ' which is not currently supported')
+
+
 def logprocess(cloudvolume: cv.CloudVolume,
                process: Process,
                duplicate: bool = False
@@ -192,7 +192,7 @@ def logprocess(cloudvolume: cv.CloudVolume,
     provenance_dict, envfilecontents = process.log()
     envfilenames = provenance_dict['code_envfiles']
 
-    if duplicate or process_absent(cloudvolume, process.description):
+    if duplicate or process_absent(cloudvolume, process):
         logcodefiles(cloudvolume, envfilenames, envfilecontents)
         cloudvolume.provenance.processing.append(provenance_dict)
 
@@ -204,13 +204,18 @@ def logprocess(cloudvolume: cv.CloudVolume,
     cloudvolume.commit_provenance()
 
 
-def process_absent(cloudvolume: cv.CloudVolume, processname: str) -> bool:
+def process_absent(cloudvolume: cv.CloudVolume, process: Process) -> bool:
     'Checks whether a process has already been logged. Returns True if not'
-    processes = cloudvolume.provenance.processing
-    processnames = [process['task'] for process in processes
-                    if 'task' in process]
+    logged = cloudvolume.provenance.processing
 
-    return processname not in processnames
+    def sameproc(loggedprocess: Process):
+        return (loggedprocess['task'] == process.description
+                and loggedprocess['parameters'] == process.parameters)
+
+    candidates = list(filter(sameproc, logged))
+
+    if len(candidates) == 0:
+        return True
 
 
 def logcodefiles(cloudvolume: cv.CloudVolume,

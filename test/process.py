@@ -6,8 +6,6 @@ from collections import namedtuple
 import pytest
 import git
 
-import cloudvolume as cv
-
 
 RepoInfo = namedtuple('RepoInfo', ['name', 'currenthash'])
 
@@ -41,6 +39,15 @@ def thisProcess(thisPythonGithubEnv):
     'A dummy process that uses thisPythonGithubEnv as a test'
     description = 'Adding not so useful documentation'
     parameters = {}
+
+    return process.Process(description, parameters, thisPythonGithubEnv)
+
+
+@pytest.fixture
+def thisProcessWParams(thisPythonGithubEnv):
+    'A dummy process that has parameters in contrast to the last one'
+    description = 'Adding not so useful documentation'
+    parameters = {'a': 3, 'b': 4}
 
     return process.Process(description, parameters, thisPythonGithubEnv)
 
@@ -156,3 +163,22 @@ def test_logDockerEnvWPackages(testcloudvolume,
     assert content['tag'] == testCodeEnv.tag
     assert content['image ID'] == testCodeEnv.imageID
     assert content['packages'] == list(map(list, testCodeEnv.packagelist))
+
+
+def cleanprocessing(cloudvolume):
+    cloudvolume.provenance.processing = []
+    cloudvolume.commit_provenance()
+
+def test_process_absent(testcloudvolume, thisProcess, thisProcessWParams):
+    'Tests for process.process_absent'
+    # Clear out any old processing
+    cleanprocessing(testcloudvolume)
+
+    basicProcessTests(testcloudvolume, thisProcess)
+
+    assert not process.process_absent(testcloudvolume, thisProcess)
+    assert process.process_absent(testcloudvolume, thisProcessWParams)
+
+    basicProcessTests(testcloudvolume, thisProcessWParams)
+
+    assert not process.process_absent(testcloudvolume, thisProcessWParams)
