@@ -22,7 +22,7 @@ The `Note` class defines a metadata note to log within a provenance file. It add
 
 Once you've defined the classes above, provenance-tools defines a set of functions for logging them within a given CloudVolume
 ```python3
-import provenancetools as pt
+import provenancetoolbox as ptb
 import cloudvolume as cv
 
 volume = cv.CloudVolume(cloudpath)
@@ -30,9 +30,9 @@ volume = cv.CloudVolume(cloudpath)
 # Defining a process
 description = 'Properly documenting a process
 parameters = {'prudence': 10/10}
-code_env = pt.PythonGithubEnv('.')  # path to the github repo directory
+code_env = ptb.PythonGithubEnv('.')  # path to the github repo directory
 
-demoprocess = pt.Process(description, parameters, code_env)
+demoprocess = ptb.Process(description, parameters, code_env)
 
 logprocess(cloudvolume, demoprocess)
 ```
@@ -40,7 +40,7 @@ Metadata about processes are logged in the provenance file of a given cloudvolum
 
 The `Note` objects are often handled implicitly in the background for you
 ```python3
-pt.addmotivation(cloudvolume, "Bootstrapping: adding segments 19&34")
-pt.addresult(cloudvolume, "Found more synapses")
-pt.addgeneric(cloudvolume, "Bizarre output in slice 37")
+ptb.addmotivation(cloudvolume, "Bootstrapping: adding segments 19&34")
+ptb.addresult(cloudvolume, "Found more synapses")
+ptb.addgeneric(cloudvolume, "Bizarre output in slice 37")
 ```
