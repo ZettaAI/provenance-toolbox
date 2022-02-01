@@ -13,7 +13,7 @@ setup(
                  ' of CloudVolume provenance files'),
     author='Nicholas Turner',
     author_email='nturner@zetta.ai',
-    url='https://github.com/ZettaAI/provenance-tools',
+    url='https://github.com/ZettaAI/provenancetoolbox',
     packages=setuptools.find_packages(),
     install_requires=['GitPython>=3.1.26', 'docker>=5.0.3',
                       'cloud-volume']
