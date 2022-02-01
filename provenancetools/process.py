@@ -55,12 +55,14 @@ class PythonGithubEnv(CodeEnv):
         self.repo = git.Repo(codeptr)
 
     @property
+    def url(self) -> str:
+        cfg = self.repo.config_reader()
+        return cfg.get('remote "origin"', 'url')
+
+    @property
     def repo_name(self) -> str:
         'The name of the github repo'
-        cfg = self.repo.config_reader()
-        url = cfg.get('remote "origin"', 'url')
-
-        return repo_name_from_url(url)
+        return repo_name_from_url(self.url)
 
     @property
     def commithash(self) -> str:
@@ -88,7 +90,7 @@ class PythonGithubEnv(CodeEnv):
         'The contents of the code environment file'
         contents = dict()
 
-        contents['name'] = self.repo_name
+        contents['name'] = self.url
         contents['CodeEnv type'] = 'PythonGithub'
         contents['commit hash'] = self.commithash
         contents['diff'] = self.diff

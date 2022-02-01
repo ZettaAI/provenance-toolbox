@@ -7,7 +7,7 @@ import pytest
 import git
 
 
-RepoInfo = namedtuple('RepoInfo', ['name', 'currenthash'])
+RepoInfo = namedtuple('RepoInfo', ['name', 'url', 'currenthash'])
 
 SYNAPTOR_DESC = 'Doing something with the Synaptor docker container'
 SYNAPTOR_PARAMS = {}
@@ -23,9 +23,10 @@ def thisrepoinfo():
     'Info extracted from this git repo when called using GitPython'
     repo = git.Repo('.')
     name = 'provenance-tools'
+    url = 'https://github.com/ZettaAI/provenance-tools.git'
     currenthash = repo.commit().hexsha
 
-    return RepoInfo(name, currenthash)
+    return RepoInfo(name, url, currenthash)
 
 
 @pytest.fixture
@@ -80,6 +81,7 @@ def SynaptorDockerProcessWPackages(SynaptorDockerEnvWPackages):
 def test_PythonGithubEnv(thisrepoinfo, thisPythonGithubEnv):
     'Tests for the PythonGithubEnv class representation'
     assert thisPythonGithubEnv.repo_name == thisrepoinfo.name
+    assert thisPythonGithubEnv.url == thisrepoinfo.url
     assert thisPythonGithubEnv.commithash == thisrepoinfo.currenthash
     assert thisPythonGithubEnv.filename == (f'{thisrepoinfo.name}'
                                             f'_{thisrepoinfo.currenthash}')
@@ -127,7 +129,7 @@ def test_logPythonGithubEnv(testcloudvolume, thisProcess):
     testCodeEnv = thisProcess.code_envs[0]
 
     assert content['CodeEnv type'] == 'PythonGithub'
-    assert content['name'] == testCodeEnv.repo_name
+    assert content['name'] == testCodeEnv.url
     assert content['commit hash'] == testCodeEnv.commithash
     assert content['diff'] == testCodeEnv.diff
     assert content['packages'] == list(map(list, testCodeEnv.packagelist))
