@@ -16,6 +16,8 @@ SYNAPTOR_PARAMS = {}
 SYNAPTOR_IMAGE = 'zettaai/synaptor'
 SYNAPTOR_TAG = 'floatresolutions'
 SYNAPTOR_ID = 'c64d9d42ac38'
+SYNAPTOR_DESC2 = 'Doing something else with the Synaptor docker container'
+SYNAPTOR_ID2 = 'c64d9d42ac3802983749023784'
 
 
 @pytest.fixture
@@ -45,13 +47,27 @@ def thisProcess(thisPythonGithubEnv):
 
 @pytest.fixture
 def SynaptorDockerEnv():
-    return process.DockerEnv(SYNAPTOR_IMAGE, SYNAPTOR_TAG, SYNAPTOR_ID)
+    return process.DockerEnv(SYNAPTOR_IMAGE, SYNAPTOR_TAG,
+                             SYNAPTOR_ID)
+
+
+@pytest.fixture
+def SynaptorDockerEnvWPackages():
+    return process.DockerEnv(SYNAPTOR_IMAGE, SYNAPTOR_TAG,
+                             SYNAPTOR_ID2, include_packages=True)
 
 
 @pytest.fixture
 def SynaptorDockerProcess(SynaptorDockerEnv):
     'A dummy process using a Synaptor docker image'
     return process.Process(SYNAPTOR_DESC, SYNAPTOR_PARAMS, SynaptorDockerEnv)
+
+
+@pytest.fixture
+def SynaptorDockerProcessWPackages(SynaptorDockerEnvWPackages):
+    'A dummy process using a Synaptor docker image'
+    return process.Process(SYNAPTOR_DESC2, SYNAPTOR_PARAMS,
+                           SynaptorDockerEnvWPackages)
 
 
 def test_PythonGithubEnv(thisrepoinfo, thisPythonGithubEnv):
@@ -107,6 +123,7 @@ def test_logPythonGithubEnv(testcloudvolume, thisProcess):
     assert content['name'] == testCodeEnv.repo_name
     assert content['commit hash'] == testCodeEnv.commithash
     assert content['diff'] == testCodeEnv.diff
+    assert content['packages'] == list(map(list, testCodeEnv.packagelist))
 
 
 def test_logDockerEnv(testcloudvolume, SynaptorDockerProcess):
@@ -121,4 +138,21 @@ def test_logDockerEnv(testcloudvolume, SynaptorDockerProcess):
     assert content['CodeEnv type'] == 'Docker'
     assert content['image name'] == testCodeEnv.imagename
     assert content['tag'] == testCodeEnv.tag
-    assert content['container ID'] == testCodeEnv.containerID
+    assert content['image ID'] == testCodeEnv.imageID
+
+
+def test_logDockerEnvWPackages(testcloudvolume,
+                               SynaptorDockerProcessWPackages):
+    'Tests for logging DockerEnv processes with python packages'
+    basicProcessTests(testcloudvolume, SynaptorDockerProcessWPackages)
+
+    # Does the code environment file store the correct information?
+    content = readNewestCodeEnvFile(testcloudvolume, 0)
+    testCodeEnv = SynaptorDockerProcessWPackages.code_envs[0]
+    print(testCodeEnv.imagename)
+
+    assert content['CodeEnv type'] == 'Docker'
+    assert content['image name'] == testCodeEnv.imagename
+    assert content['tag'] == testCodeEnv.tag
+    assert content['image ID'] == testCodeEnv.imageID
+    assert content['packages'] == list(map(list, testCodeEnv.packagelist))

@@ -144,27 +144,44 @@ class DockerEnv(CodeEnv):
     A representation of a code environment specified by a 
     docker image and tag.
     '''
-    def __init__(self, imagename: str, tag: str, containerID: str):
+    def __init__(self,
+                 imagename: str,
+                 tag: str,
+                 imageID: str,
+                 include_packages: bool = False):
         self.imagename = imagename
         self.tag = tag
-        self.containerID = containerID
+        self.imageID = imageID
+        self.include_packages = include_packages
 
     @property
     def filename(self) -> str:
         'The code environment filename to store alongside the provenance file'
         # need to replace '/' with something else to avoid creating extra
         # directories
-        return f"{self.imagename.replace('/','_')}_{self.tag}"
+        return (f'{self.imagename.replace("/","_")}'
+                f'_{self.imageID.replace(":","")}')
 
     @property
     def contents(self) -> str:
         'The contents of the code environment file'
-        return json.dumps(
-                {"CodeEnv type": 'Docker',
-                 "image name": self.imagename,
-                 "tag": self.tag,
-                 "container ID": self.containerID}
-                )
+        contents_dict = {
+            'CodeEnv type': 'Docker',
+            'image name': self.imagename,
+            'tag': self.tag,
+            'image ID': self.imageID
+            }
+
+        if self.include_packages:
+            contents_dict['packages'] = self.packagelist
+
+        return json.dumps(contents_dict)
+
+    @property
+    def packagelist(self) -> List[Tuple[str, str]]:
+        'The environment of python packages'
+        return [(p.project_name, p.version)
+                for p in pkg_resources.working_set]
 
 
 def logprocess(cloudvolume: CloudVolume,
@@ -173,7 +190,7 @@ def logprocess(cloudvolume: CloudVolume,
                ) -> None:
     'Adds a processing step to the provenance log documentation'
     provenance_dict, envfilecontents = process.log()
-    envfilenames = provenance_dict["code_envfiles"]
+    envfilenames = provenance_dict['code_envfiles']
 
     if duplicate or process_absent(cloudvolume, process.description):
         logcodefiles(cloudvolume, envfilenames, envfilecontents)
@@ -190,8 +207,8 @@ def logprocess(cloudvolume: CloudVolume,
 def process_absent(cloudvolume: CloudVolume, processname: str) -> bool:
     'Checks whether a process has already been logged. Returns True if not'
     processes = cloudvolume.provenance.processing
-    processnames = [process["task"] for process in processes
-                    if "task" in process]
+    processnames = [process['task'] for process in processes
+                    if 'task' in process]
 
     return processname not in processnames
 
@@ -218,8 +235,8 @@ def codefile_absent(cloudvolume: CloudVolume, filename: str) -> bool:
     processes = cloudvolume.provenance.processing
     codefilenames = []
     for process in processes:
-        if "code_envfiles" in process:
-            codefilenames.extend(process["code_envfiles"])
+        if 'code_envfiles' in process:
+            codefilenames.extend(process['code_envfiles'])
 
     return filename not in codefilenames
 
