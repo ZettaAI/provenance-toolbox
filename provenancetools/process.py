@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import os
 import json
+import pkg_resources
 from typing import Union
 from types import SimpleNamespace
 from configparser import ConfigParser
 
-import pkg_resources
 import git
 import cloudvolume as cv
 

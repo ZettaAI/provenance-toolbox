@@ -16,6 +16,7 @@ import cloudvolume as cv
 NOTE_SEP = ' \n '
 FIELD_SEP = ';'
 
+
 __all__ = ['parsenotes', 'note_absent',
            'addmotivation', 'addresult', 'addgeneric']
 
