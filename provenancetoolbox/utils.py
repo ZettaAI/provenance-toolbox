@@ -1,8 +1,6 @@
-'''
-utils.py
-
+"""
 Basic utility functions
-'''
+"""
 from __future__ import annotations
 
 import json
@@ -16,7 +14,13 @@ def sendjsonfile(cloudvolume: cv.CloudVolume,
                  filename: str,
                  content: str
                  ) -> None:
-    'Stores a json file using CloudFiles'
+    """Stores a json file using CloudFiles.
+
+    Args:
+        cloudvolume: A CloudVolume.
+        filename: The filename to use under the CloudVolume's cloudpath.
+        content: The JSON content of the file as a string.
+    """
     cf = CloudFiles(cloudvolume.cloudpath)
 
     prettycontent = json.loads(content)
@@ -30,11 +34,21 @@ def sendjsonfile(cloudvolume: cv.CloudVolume,
 
 
 def dockerimageID(imagename: str, tag: str) -> str:
-    '''
-    A tool to fetch the full image ID from a docker image name and tag
+    """Fetches the full image ID from a docker image name and tag.
 
     Requires the current user to have access to the docker daemon.
-    '''
+
+    Args:
+        imagename: The image name to identify.
+        tag: The image tag to identify.
+
+    Returns:
+        The SHA hash of the docker image under the image name and tag if
+        it can be found.
+
+    Raises:
+        ValueError: Unable to find the requested image.
+    """
     key = f'{imagename}:{tag}'
 
     client = docker.from_env()
