@@ -2,6 +2,7 @@ import os
 import json
 from provenancetoolbox import process
 from collections import namedtuple
+import cloudvolume as cv
 
 import pytest
 import git
@@ -48,7 +49,9 @@ def thisProcess(thisPythonGithubEnv):
 def thisProcessWParams(thisPythonGithubEnv):
     'A dummy process that has parameters in contrast to the last one'
     description = 'Adding not so useful documentation'
-    parameters = {'a': 3, 'b': 4}
+    # the tuple parameter here implicitly tests process.jsonify as
+    # JSON converts tuples to lists
+    parameters = {'a': 3, 'b': 4, 't': (1, 2, 3)}
 
     return process.Process(description, parameters, thisPythonGithubEnv)
 
@@ -171,16 +174,26 @@ def cleanprocessing(cloudvolume):
     cloudvolume.provenance.processing = []
     cloudvolume.commit_provenance()
 
+
+def refreshcloudvolume(cloudvolume):
+    """Re-initializes a cloudvolume to simulate separate process' reads."""
+    cloudvolume.commit_provenance()
+
+    return cv.CloudVolume(cloudvolume.cloudpath)
+
+
 def test_process_absent(testcloudvolume, thisProcess, thisProcessWParams):
     'Tests for process.process_absent'
     # Clear out any old processing
     cleanprocessing(testcloudvolume)
 
     basicProcessTests(testcloudvolume, thisProcess)
+    testcloudvolume = refreshcloudvolume(testcloudvolume)
 
     assert not process.process_absent(testcloudvolume, thisProcess)
     assert process.process_absent(testcloudvolume, thisProcessWParams)
 
     basicProcessTests(testcloudvolume, thisProcessWParams)
+    testcloudvolume = refreshcloudvolume(testcloudvolume)
 
     assert not process.process_absent(testcloudvolume, thisProcessWParams)

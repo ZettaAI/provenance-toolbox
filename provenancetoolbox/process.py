@@ -295,12 +295,20 @@ def process_absent(cloudvolume: cv.CloudVolume, process: Process) -> bool:
 
     def sameproc(loggedprocess: Process):
         return (loggedprocess['task'] == process.description
-                and loggedprocess['parameters'] == process.parameters)
+                and loggedprocess['parameters'] == jsonify(process.parameters))
 
     candidates = list(filter(sameproc, logged))
 
-    if len(candidates) == 0:
-        return True
+    return len(candidates) == 0
+
+
+def jsonify(parameters: dict) -> dict:
+    """Converts a parameter dictionary to use the types allowed by JSON."""
+    dumped = json.dumps(
+        parameters, sort_keys=True, indent=2, separators=(',', ': ')
+    )
+
+    return json.loads(dumped)
 
 
 def logcodefiles(cloudvolume: cv.CloudVolume,
