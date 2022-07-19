@@ -22,8 +22,8 @@ SYNAPTOR_ID2 = 'c64d9d42ac3802983749023784'
 def thisrepoinfo():
     'Info extracted from this git repo when called using GitPython'
     repo = git.Repo('.')
-    name = 'provenance-tools'
-    url = 'https://github.com/ZettaAI/provenance-tools.git'
+    name = 'provenance-toolbox'
+    url = 'https://github.com/ZettaAI/provenance-toolbox.git'
     currenthash = repo.commit().hexsha
 
     return RepoInfo(name, url, currenthash)
