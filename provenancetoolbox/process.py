@@ -294,8 +294,11 @@ def process_absent(cloudvolume: cv.CloudVolume, process: Process) -> bool:
     logged = cloudvolume.provenance.processing
 
     def sameproc(loggedprocess: Process):
-        return (loggedprocess['task'] == process.description
-                and loggedprocess['parameters'] == jsonify(process.parameters))
+        result = False
+        if 'task' in loggedprocess and 'parameters' in loggedprocess:
+            result = (loggedprocess['task'] == process.description and
+                      loggedprocess['parameters'] == jsonify(process.parameters))
+        return result
 
     candidates = list(filter(sameproc, logged))
 
